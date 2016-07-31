@@ -1,6 +1,6 @@
 # cocoapods-amimono
 
-A description of cocoapods-amimono.
+Move all dynamic frameworks symbols into the main executable.
 
 ## Installation
 
@@ -8,4 +8,4 @@ A description of cocoapods-amimono.
 
 ## Usage
 
-    $ pod spec amimono POD_NAME
+    $ plugin 'cocoapods-amimono'
