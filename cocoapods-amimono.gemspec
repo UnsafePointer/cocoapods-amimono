@@ -6,11 +6,11 @@ require 'cocoapods-amimono/gem_version.rb'
 Gem::Specification.new do |spec|
   spec.name          = 'cocoapods-amimono'
   spec.version       = CocoapodsAmimono::VERSION
-  spec.authors       = ['Renzo Crisóstomo']
-  spec.email         = ['renzo.crisostomo@xing.com']
-  spec.description   = %q{A short description of cocoapods-amimono.}
-  spec.summary       = %q{A longer description of cocoapods-amimono.}
-  spec.homepage      = 'https://github.com/EXAMPLE/cocoapods-amimono'
+  spec.authors       = ['Renzo Crisostomo']
+  spec.email         = ['renzo.crisostomo@me.com']
+  spec.description   = %q{Move all dynamic frameworks symbols into the main executable.}
+  spec.summary       = %q{Move all dynamic frameworks symbols into the main executable.}
+  spec.homepage      = 'https://github.com/Ruenzuo/cocoapods-amimono'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files`.split($/)
