@@ -23,7 +23,7 @@ module Amimono
       user_project = aggregated_target.user_project
       # Remove the `Embed Pods Frameworks` build phase
       application_target = user_project.targets.find { |target| target.product_type.end_with? 'application' }
-      embed_pods_frameworks_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.eql? '[CP] Embed Pods Frameworks' }
+      embed_pods_frameworks_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? 'Embed Pods Frameworks' }
       embed_pods_frameworks_build_phase.remove_from_project
       # Check if [Amimono] phase already exist
       amimono_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? '[Amimono]' }
