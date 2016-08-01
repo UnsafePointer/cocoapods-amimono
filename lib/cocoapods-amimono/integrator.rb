@@ -40,11 +40,13 @@ module Amimono
         configuration = ENV['CONFIGURATION']
         platform = ENV['EFFECTIVE_PLATFORM_NAME']
         archs = ENV['ARCHS']
+        target_name = ENV['TARGET_NAME']
 
         archs.split(" ").each do |architecture|
           Dir.chdir("\#{intermediates_directory}/Pods.build") do
             filelist = ""
             Dir.glob("\#{configuration}\#{platform}/*.build/Objects-normal/\#{architecture}/*.o") do |object_file|
+              next if ["Pods-\#{target_name}-dummy", "Pods_\#{target_name}_vers"].any? { |dummy_object| object_file.include? dummy_object }
               filelist += File.absolute_path(object_file) + "\\n"
             end
             File.write("\#{configuration}\#{platform}-\#{architecture}.objects.filelist", filelist)
