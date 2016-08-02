@@ -21,6 +21,8 @@ module Amimono
           end
         SCRIPT
 
+    AMIMONO_FILELIST_BUILD_PHASE = '[Amimono] Create filelist per architecture'
+
     def update_xcconfigs(aggregated_target_sandbox_path:)
       path = aggregated_target_sandbox_path
       archs = ['armv7', 'arm64', 'i386', 'x86_64']
@@ -45,8 +47,8 @@ module Amimono
       # Remove the `Embed Pods Frameworks` build phase
       remove_embed_pods_frameworks(application_target: application_target)
       # Create or update [Amimono] build phase
-      amimono_build_phase = create_or_get_amimono_phase(application_target: application_target)
-      application_target.build_phases.insert(1, amimono_build_phase)
+      amimono_filelist_build_phase = create_or_get_amimono_phase(application_target: application_target, phase_name: AMIMONO_FILELIST_BUILD_PHASE, script: FILELIST_SCRIPT)
+      application_target.build_phases.insert(1, amimono_filelist_build_phase)
       application_target.build_phases.uniq!
       user_project.save
     end
@@ -57,10 +59,10 @@ module Amimono
       embed_pods_frameworks_build_phase.remove_from_project
     end
 
-    def create_or_get_amimono_phase(application_target:)
-      return application_target.build_phases.find { |build_phase| build_phase.display_name.include? '[Amimono]' } || application_target.new_shell_script_build_phase('[Amimono] Create filelist per architecture').tap do |shell_build_phase|
+    def create_or_get_amimono_phase(application_target:, phase_name:, script:)
+      return application_target.build_phases.find { |build_phase| build_phase.display_name.include? phase_name } || application_target.new_shell_script_build_phase(phase_name).tap do |shell_build_phase|
         shell_build_phase.shell_path = '/usr/bin/ruby'
-        shell_build_phase.shell_script = FILELIST_SCRIPT
+        shell_build_phase.shell_script = script
       end
     end
   end
