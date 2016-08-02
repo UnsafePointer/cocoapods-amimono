@@ -1,6 +1,26 @@
 module Amimono
   class Integrator
 
+    FILELIST_SCRIPT = <<-SCRIPT.strip_heredoc
+          #!/usr/bin/ruby
+          intermediates_directory = ENV['OBJROOT']
+          configuration = ENV['CONFIGURATION']
+          platform = ENV['EFFECTIVE_PLATFORM_NAME']
+          archs = ENV['ARCHS']
+          target_name = ENV['TARGET_NAME']
+
+          archs.split(" ").each do |architecture|
+            Dir.chdir("\#{intermediates_directory}/Pods.build") do
+              filelist = ""
+              Dir.glob("\#{configuration}\#{platform}/*.build/Objects-normal/\#{architecture}/*.o") do |object_file|
+                next if ["Pods-\#{target_name}-dummy", "Pods_\#{target_name}_vers"].any? { |dummy_object| object_file.include? dummy_object }
+                filelist += File.absolute_path(object_file) + "\\n"
+              end
+              File.write("\#{configuration}\#{platform}-\#{architecture}.objects.filelist", filelist)
+            end
+          end
+        SCRIPT
+
     def update_xcconfigs(aggregated_target_sandbox_path:)
       path = aggregated_target_sandbox_path
       archs = ['armv7', 'arm64', 'i386', 'x86_64']
@@ -21,40 +41,27 @@ module Amimono
 
     def update_build_phases(aggregated_target:)
       user_project = aggregated_target.user_project
-      # Remove the `Embed Pods Frameworks` build phase
       application_target = user_project.targets.find { |target| target.product_type.end_with? 'application' }
-      embed_pods_frameworks_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? 'Embed Pods Frameworks' }
-      embed_pods_frameworks_build_phase.remove_from_project
-      # Check if [Amimono] phase already exist
-      amimono_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? '[Amimono]' }
-      user_project.save
-      return unless amimono_build_phase.nil?
-      # Add new shell
-      shell_build_phase = application_target.new_shell_script_build_phase '[Amimono] Create filelist per architecture'
-      application_target.build_phases.insert(1, shell_build_phase)
+      # Remove the `Embed Pods Frameworks` build phase
+      remove_embed_pods_frameworks(application_target: application_target)
+      # Create or update [Amimono] build phase
+      amimono_build_phase = create_or_get_amimono_phase(application_target: application_target)
+      application_target.build_phases.insert(1, amimono_build_phase)
       application_target.build_phases.uniq!
-      shell_build_phase.shell_path = '/usr/bin/ruby'
-      shell_build_phase.shell_script = <<-SCRIPT.strip_heredoc
-        #!/usr/bin/ruby
-        intermediates_directory = ENV['OBJROOT']
-        configuration = ENV['CONFIGURATION']
-        platform = ENV['EFFECTIVE_PLATFORM_NAME']
-        archs = ENV['ARCHS']
-        target_name = ENV['TARGET_NAME']
-
-        archs.split(" ").each do |architecture|
-          Dir.chdir("\#{intermediates_directory}/Pods.build") do
-            filelist = ""
-            Dir.glob("\#{configuration}\#{platform}/*.build/Objects-normal/\#{architecture}/*.o") do |object_file|
-              next if ["Pods-\#{target_name}-dummy", "Pods_\#{target_name}_vers"].any? { |dummy_object| object_file.include? dummy_object }
-              filelist += File.absolute_path(object_file) + "\\n"
-            end
-            File.write("\#{configuration}\#{platform}-\#{architecture}.objects.filelist", filelist)
-          end
-        end
-      SCRIPT
       user_project.save
     end
 
+    def remove_embed_pods_frameworks(application_target:)
+      embed_pods_frameworks_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? 'Embed Pods Frameworks' }
+      return if embed_pods_frameworks_build_phase.nil?
+      embed_pods_frameworks_build_phase.remove_from_project
+    end
+
+    def create_or_get_amimono_phase(application_target:)
+      return application_target.build_phases.find { |build_phase| build_phase.display_name.include? '[Amimono]' } || application_target.new_shell_script_build_phase('[Amimono] Create filelist per architecture').tap do |shell_build_phase|
+        shell_build_phase.shell_path = '/usr/bin/ruby'
+        shell_build_phase.shell_script = FILELIST_SCRIPT
+      end
+    end
   end
 end
