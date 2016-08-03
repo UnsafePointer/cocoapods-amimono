@@ -25,7 +25,7 @@ module Amimono
 
     def update_xcconfigs(aggregated_target_sandbox_path:)
       path = aggregated_target_sandbox_path
-      archs = ['armv7', 'arm64', 'i386', 'x86_64']
+      archs = ['armv7', 'armv7s', 'arm64', 'i386', 'x86_64']
       # Find all xcconfigs for the aggregated target
       Dir.entries(path).select { |entry| entry.end_with? 'xcconfig' }.each do |entry|
         full_path = path + entry
