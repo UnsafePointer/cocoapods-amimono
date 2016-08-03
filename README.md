@@ -8,9 +8,9 @@ Move all dynamic frameworks symbols into the main executable.
 
 ## Why would you want this plugin in your Podfile?
 
-Apple introduced dynamic linking on iOS 8 alongside with Swift. Shortly after, this was adopted by CocoaPods as a requirement to use Pods that contains Swift, because Xcode can't use static libraries with Swift.
+Apple introduced dynamic linking on iOS 8 alongside with Swift. Shortly after, this was adopted by CocoaPods as a requirement to use Pods that contain Swift, because Xcode can't use static libraries with Swift.
 
-On iOS 9.1, a dyld crash aftected the vast mayority of apps that used a high number of dynamic frameworks. You can learn more about the issue on [artsy/eigen#1246](https://github.com/artsy/eigen/issues/1246). Although the issue was fixed on iOS 9.3.2, it was clear the having a high number of dynamic frameworks was not a good idea. During WWDC 2016, someone asked what would be the optimal number of dynamic frameworks on an iOS application and we got the following response:
+On iOS 9.1, a dyld crash affected the vast majority of apps that used a high number of dynamic frameworks. You can learn more about the issue on [artsy/eigen#1246](https://github.com/artsy/eigen/issues/1246). Although the issue was fixed on iOS 9.3.2, it was clear that having a high number of dynamic frameworks was not a good idea. During WWDC 2016, someone asked what would be the optimal number of dynamic frameworks on an iOS application and we got the following response:
 
 > Apple advises to use about half a dozen dynamic frameworks in an app. Hard to achieve with external & internal deps.
 > -- from [Twitter](https://twitter.com/arekholko/status/743135179514978304)
@@ -29,8 +29,8 @@ and looking at the log output you shouldn't find any `dlopen` call of your Cocoa
 
 Currently this plugin has the following limitations:
 
-* You will have to add a script (or copy it's contents to your Podfile) and execute it on `post_install` hook. This because currently CocoaPods plugin API doesn't offer everything that script needs.
-* Only dependencies compiled from source will work. This means dependencies that bundled binaries (like vendored static frameworks) won't work. You will have to add these manually to your Xcode project.
+* You will have to add a script (or copy its contents to your Podfile) and execute it on `post_install` hook. This is necessary because the CocoaPods plugin API currently doesn't offer everything that script needs.
+* Only dependencies compiled from source will work. This means dependencies with bundled binaries (like vendored static frameworks) won't work. You will have to add these manually to your Xcode project.
 
 ## Installation
 
