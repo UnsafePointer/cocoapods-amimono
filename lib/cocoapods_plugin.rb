@@ -3,6 +3,9 @@ require 'cocoapods-amimono/integrator'
 
 Pod::HooksManager.register('cocoapods-amimono', :post_install) do |installer_context|
   # Find the aggregated target
+  # This is probably wrong, all agregated targets are prefixed by 'Pods-'
+  # but this works for now because find will return the first one
+  # which is usually the app target
   pods_target = installer_context.umbrella_targets.find do |target|
     target.cocoapods_target_label.include? 'Pods'
   end
