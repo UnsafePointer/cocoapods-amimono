@@ -54,3 +54,7 @@ post_install do |installer|
   Amimono::Patcher.patch_copy_resources_script(installer: installer)
   ...
 ```
+
+## Example project
+
+[Here](https://github.com/Ruenzuo/cocoapods-amimono-example).
