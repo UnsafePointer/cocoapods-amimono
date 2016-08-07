@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cocoapods-amimono (0.0.1)
+    cocoapods-amimono (0.0.2)
 
 GEM
   remote: https://rubygems.org/
