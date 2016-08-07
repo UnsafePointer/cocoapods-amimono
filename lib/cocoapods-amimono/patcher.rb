@@ -9,6 +9,7 @@ module Amimono
       resources = resources_by_config(aggregated_target: aggregated_target, project: project)
       generator = Pod::Generator::CopyResourcesScript.new(resources, aggregated_target.platform)
       generator.save_as(path)
+      puts "[Amimono] Copy resources script patched"
     end
 
     private
