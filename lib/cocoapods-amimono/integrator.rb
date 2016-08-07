@@ -49,9 +49,7 @@ module Amimono
       # Remove the `Embed Pods Frameworks` build phase
       remove_embed_pods_frameworks(application_target: application_target)
       # Create or update [Amimono] build phase
-      amimono_filelist_build_phase = create_or_get_amimono_phase(application_target: application_target, phase_name: AMIMONO_FILELIST_BUILD_PHASE, script: generate_filelist_script(aggregated_target: aggregated_target))
-      application_target.build_phases.insert(1, amimono_filelist_build_phase)
-      application_target.build_phases.uniq!
+      create_or_update_amimono_phase(application_target: application_target, phase_name: AMIMONO_FILELIST_BUILD_PHASE, script: generate_filelist_script(aggregated_target: aggregated_target))
       user_project.save
     end
 
@@ -63,11 +61,12 @@ module Amimono
       embed_pods_frameworks_build_phase.remove_from_project
     end
 
-    def create_or_get_amimono_phase(application_target:, phase_name:, script:)
-      return application_target.build_phases.find { |build_phase| build_phase.display_name.include? phase_name } || application_target.new_shell_script_build_phase(phase_name).tap do |shell_build_phase|
-        shell_build_phase.shell_path = '/usr/bin/ruby'
-        shell_build_phase.shell_script = script
-      end
+    def create_or_update_amimono_phase(application_target:, phase_name:, script:)
+      amimono_filelist_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? phase_name } || application_target.new_shell_script_build_phase(phase_name)
+      amimono_filelist_build_phase.shell_path = '/usr/bin/ruby'
+      amimono_filelist_build_phase.shell_script = script
+      application_target.build_phases.insert(1, amimono_filelist_build_phase)
+      application_target.build_phases.uniq!
     end
 
     def generate_filelist_script(aggregated_target:)
