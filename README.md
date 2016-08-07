@@ -29,26 +29,28 @@ and looking at the log output you shouldn't find any `dlopen` call of your Cocoa
 
 Currently this plugin has the following limitations:
 
-* You will have to add a script (or copy its contents to your Podfile) and execute it on `post_install` hook. This is necessary because the CocoaPods plugin API currently doesn't offer everything that script needs.
+* You will have modify your `post_install` hook. This is necessary because the CocoaPods plugin API currently doesn't offer everything that the gem needs.
 * Only dependencies compiled from source will work. This means dependencies with bundled binaries (like vendored static frameworks) won't work. You will have to add these manually to your Xcode project.
 
 ## Installation
 
-    $ gem install cocoapods-amimono
+```bash
+gem install cocoapods-amimono
+````
 
 ## Usage
 
 Add the following to your Podfile:
 
-    $ plugin 'cocoapods-amimono'
+```ruby
+plugin 'cocoapods-amimono'
+```
 
 Add the following to your `post_install` hook:
 
 ```ruby
 post_install do |installer|
-  require_relative './amimono_patch.rb'
-  AmimonoPatch.patch_copy_resources_script(installer: installer)
+  require 'cocoapods-amimono/patcher'
+  Amimono::Patcher.patch_copy_resources_script(installer: installer)
   ...
 ```
-
-You can get the script from [here](amimono_patch.rb).
