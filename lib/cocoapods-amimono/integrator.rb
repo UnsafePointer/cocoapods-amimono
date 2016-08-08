@@ -2,7 +2,6 @@ module Amimono
   class Integrator
 
     FILELIST_SCRIPT = <<-SCRIPT.strip_heredoc
-          declare -a EXCLUDE=("Pods-${TARGET_NAME}-dummy" "Pods_${TARGET_NAME}_vers");
           IFS=" " read -r -a SPLIT <<< "$ARCHS"
           for ARCH in "${SPLIT[@]}"; do
             cd "$OBJROOT/Pods.build"
@@ -10,16 +9,6 @@ module Amimono
             for dependency in "${DEPENDENCIES[@]}"; do
               path="${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/${dependency}.build/Objects-normal/${ARCH}/*.o"
               for obj_file in $path; do
-                should_continue=false
-                for exclude_element in "${EXCLUDE[@]}"; do
-                  if [[ $obj_file == *"${exclude_element}"* ]]
-                  then
-                    should_continue = true
-                  fi
-                done
-                if [ "$should_continue" = true ]; then
-                  continue
-                fi
                 filelist+="${OBJROOT}/Pods.build/${obj_file}"
                 filelist+=$'\\n'
               done
