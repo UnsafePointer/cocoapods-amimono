@@ -2,25 +2,20 @@ module Amimono
   class Integrator
 
     FILELIST_SCRIPT = <<-SCRIPT.strip_heredoc
-          #!/usr/bin/ruby
-          intermediates_directory = ENV['OBJROOT']
-          configuration = ENV['CONFIGURATION']
-          platform = ENV['EFFECTIVE_PLATFORM_NAME']
-          archs = ENV['ARCHS']
-          target_name = ENV['TARGET_NAME']
-
-          archs.split(" ").each do |architecture|
-            Dir.chdir("\#{intermediates_directory}/Pods.build") do
-              filelist = ""
-              %s.each do |dependency|
-                Dir.glob("\#{configuration}\#{platform}/\#{dependency}.build/Objects-normal/\#{architecture}/*.o") do |object_file|
-                  next if ["Pods-\#{target_name}-dummy", "Pods_\#{target_name}_vers"].any? { |dummy_object| object_file.include? dummy_object }
-                  filelist += File.absolute_path(object_file) + "\\n"
-                end
-              end
-              File.write("\#{configuration}\#{platform}-\#{architecture}.objects.filelist", filelist)
-            end
-          end
+          IFS=" " read -r -a SPLIT <<< "$ARCHS"
+          for ARCH in "${SPLIT[@]}"; do
+            cd "$OBJROOT/Pods.build"
+            filelist=""
+            for dependency in "${DEPENDENCIES[@]}"; do
+              path="${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/${dependency}.build/Objects-normal/${ARCH}/*.o"
+              for obj_file in $path; do
+                filelist+="${OBJROOT}/Pods.build/${obj_file}"
+                filelist+=$'\\n'
+              done
+            done
+            filelist=${filelist\%$'\\n'}
+            echo "$filelist" > "${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}-${ARCH}.objects.filelist"
+          done
         SCRIPT
 
     AMIMONO_FILELIST_BUILD_PHASE = '[Amimono] Create filelist per architecture'
@@ -63,7 +58,7 @@ module Amimono
 
     def create_or_update_amimono_phase(application_target:, phase_name:, script:)
       amimono_filelist_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? phase_name } || application_target.new_shell_script_build_phase(phase_name)
-      amimono_filelist_build_phase.shell_path = '/usr/bin/ruby'
+      amimono_filelist_build_phase.shell_path = '/bin/bash'
       amimono_filelist_build_phase.shell_script = script
       application_target.build_phases.insert(1, amimono_filelist_build_phase)
       application_target.build_phases.uniq!
@@ -72,7 +67,9 @@ module Amimono
     def generate_filelist_script(aggregated_target:)
       dependencies = aggregated_target.specs.map(&:name).reject { |dependency| dependency.include? '/'}
       puts "[Amimono] #{dependencies.count} dependencies found"
-      FILELIST_SCRIPT % dependencies.to_s
+      bash_array = dependencies.map { |dependency| "'#{dependency}'" }.join ' '
+      declare_statement = "declare -a DEPENDENCIES=(%s);\n" % bash_array
+      declare_statement + FILELIST_SCRIPT
     end
   end
 end
