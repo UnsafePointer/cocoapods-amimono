@@ -2,20 +2,20 @@ require 'cocoapods-amimono/command'
 require 'cocoapods-amimono/integrator'
 
 Pod::HooksManager.register('cocoapods-amimono', :post_install) do |installer_context|
-  # Find the aggregated target
-  # This is probably wrong, all agregated targets are prefixed by 'Pods-'
-  # but this works for now because find will return the first one
-  # which is usually the app target
-  pods_target = installer_context.umbrella_targets.find do |target|
-    target.cocoapods_target_label.include? 'Pods'
+  # We exclude all targets that contain `Test`, which might not work for some test targets
+  # that doesn't include that word
+  pods_targets = installer_context.umbrella_targets.reject { |target| target.cocoapods_target_label.include? 'Test' }
+  target_info = Hash.new
+  pods_targets.each do |pods_target|
+    puts "[Amimono] Pods target found: #{pods_target.cocoapods_target_label}"
+    target_info[pods_target] = installer_context.sandbox.target_support_files_dir pods_target.cocoapods_target_label
   end
-  puts "[Amimono] Pods target found: #{pods_target.cocoapods_target_label}"
-
-  path = installer_context.sandbox.target_support_files_dir pods_target.cocoapods_target_label
 
   integrator = Amimono::Integrator.new
-  integrator.update_xcconfigs(aggregated_target_sandbox_path: path)
-  puts "[Amimono] xcconfigs updated with filelist"
-  integrator.update_build_phases(aggregated_target: pods_target)
-  puts "[Amimono] Build phases updated"
+  target_info.each do |pods_target, path|
+    integrator.update_xcconfigs(aggregated_target_sandbox_path: path)
+    puts "[Amimono] xcconfigs updated with filelist for target #{pods_target.cocoapods_target_label}"
+    integrator.update_build_phases(aggregated_target: pods_target)
+    puts "[Amimono] Build phases updated for target #{pods_target.cocoapods_target_label}"
+  end
 end

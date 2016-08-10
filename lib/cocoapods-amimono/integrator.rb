@@ -40,28 +40,29 @@ module Amimono
 
     def update_build_phases(aggregated_target:)
       user_project = aggregated_target.user_project
-      application_target = user_project.targets.find { |target| target.product_type.end_with? 'application' }
+      # This pick is probably wrong, but works for most of the simple cases
+      user_target = aggregated_target.user_targets.first
       # Remove the `Embed Pods Frameworks` build phase
-      remove_embed_pods_frameworks(application_target: application_target)
+      remove_embed_pods_frameworks(user_target: user_target)
       # Create or update [Amimono] build phase
-      create_or_update_amimono_phase(application_target: application_target, phase_name: AMIMONO_FILELIST_BUILD_PHASE, script: generate_filelist_script(aggregated_target: aggregated_target))
+      create_or_update_amimono_phase(user_target: user_target, phase_name: AMIMONO_FILELIST_BUILD_PHASE, script: generate_filelist_script(aggregated_target: aggregated_target))
       user_project.save
     end
 
     private
 
-    def remove_embed_pods_frameworks(application_target:)
-      embed_pods_frameworks_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? 'Embed Pods Frameworks' }
+    def remove_embed_pods_frameworks(user_target:)
+      embed_pods_frameworks_build_phase = user_target.build_phases.find { |build_phase| build_phase.display_name.include? 'Embed Pods Frameworks' }
       return if embed_pods_frameworks_build_phase.nil?
       embed_pods_frameworks_build_phase.remove_from_project
     end
 
-    def create_or_update_amimono_phase(application_target:, phase_name:, script:)
-      amimono_filelist_build_phase = application_target.build_phases.find { |build_phase| build_phase.display_name.include? phase_name } || application_target.new_shell_script_build_phase(phase_name)
+    def create_or_update_amimono_phase(user_target:, phase_name:, script:)
+      amimono_filelist_build_phase = user_target.build_phases.find { |build_phase| build_phase.display_name.include? phase_name } || user_target.new_shell_script_build_phase(phase_name)
       amimono_filelist_build_phase.shell_path = '/bin/bash'
       amimono_filelist_build_phase.shell_script = script
-      application_target.build_phases.insert(1, amimono_filelist_build_phase)
-      application_target.build_phases.uniq!
+      user_target.build_phases.insert(1, amimono_filelist_build_phase)
+      user_target.build_phases.uniq!
     end
 
     def generate_filelist_script(aggregated_target:)
