@@ -3,13 +3,15 @@ module Amimono
   # generated as if the `use_frameworks!` flag wouldn't be there
   class Patcher
     def self.patch_copy_resources_script(installer:)!
-      aggregated_target = installer.aggregate_targets.first
       project = installer.sandbox.project
-      path = aggregated_target.copy_resources_script_path
-      resources = resources_by_config(aggregated_target: aggregated_target, project: project)
-      generator = Pod::Generator::CopyResourcesScript.new(resources, aggregated_target.platform)
-      generator.save_as(path)
-      puts "[Amimono] Copy resources script patched"
+      aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
+      aggregated_targets.each do |aggregated_target|
+        path = aggregated_target.copy_resources_script_path
+        resources = resources_by_config(aggregated_target: aggregated_target, project: project)
+        generator = Pod::Generator::CopyResourcesScript.new(resources, aggregated_target.platform)
+        generator.save_as(path)
+        puts "[Amimono] Copy resources script patched for target #{aggregated_target.label}"
+      end
     end
 
     private
