@@ -38,14 +38,18 @@ module Amimono
       end
     end
 
-    def update_build_phases(aggregated_target:)
-      user_project = aggregated_target.user_project
-      # This pick is probably wrong, but works for most of the simple cases
-      user_target = aggregated_target.user_targets.first
-      # Remove the `Embed Pods Frameworks` build phase
-      remove_embed_pods_frameworks(user_target: user_target)
-      # Create or update [Amimono] build phase
-      create_or_update_amimono_phase(user_target: user_target, phase_name: AMIMONO_FILELIST_BUILD_PHASE, script: generate_filelist_script(aggregated_target: aggregated_target))
+    def update_build_phases(aggregated_targets:)
+      # All user projects should be the same I hope
+      user_project = aggregated_targets.first.user_project
+      aggregated_targets.each do |aggregated_target|
+        # This pick is probably wrong, but works for most of the simple cases
+        user_target = aggregated_target.user_targets.first
+        # Remove the `Embed Pods Frameworks` build phase
+        remove_embed_pods_frameworks(user_target: user_target)
+        # Create or update [Amimono] build phase
+        create_or_update_amimono_phase(user_target: user_target, phase_name: AMIMONO_FILELIST_BUILD_PHASE, script: generate_filelist_script(aggregated_target: aggregated_target))
+        puts "[Amimono] Build phases updated for target #{aggregated_target.cocoapods_target_label}"
+      end
       user_project.save
     end
 
