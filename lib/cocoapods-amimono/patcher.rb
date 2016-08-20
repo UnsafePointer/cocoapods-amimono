@@ -2,7 +2,33 @@ module Amimono
   # This class will patch your project's copy resources script to match the one that would be
   # generated as if the `use_frameworks!` flag wouldn't be there
   class Patcher
-    def self.patch_copy_resources_script(installer:)!
+
+    def self.patch!(installer:)
+      patch_copy_resources_script(installer: installer)
+      patch_vendored_build_settings(installer: installer)
+    end
+
+    private
+
+    def self.patch_vendored_build_settings(installer:)
+      aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
+      aggregated_targets.each do |aggregated_target|
+        path = installer.sandbox.target_support_files_dir aggregated_target.label
+        Dir.entries(path).select { |entry| entry.end_with? 'xcconfig' }.each do |entry|
+          full_path = path + entry
+          xcconfig = Xcodeproj::Config.new full_path
+          # Another option would be to inspect installer.analysis_result.result.target_inspections
+          # But this also works and it's simpler
+          configuration = entry.split('.')[-2]
+          pod_targets = aggregated_target.pod_targets_for_build_configuration configuration
+          generate_vendored_build_settings(pod_targets: pod_targets, xcconfig: xcconfig)
+          xcconfig.save_as full_path
+        end
+        puts "[Amimono] Vendored build settings patched for target #{aggregated_target.label}"
+      end
+    end
+
+    def self.patch_copy_resources_script(installer:)
       project = installer.sandbox.project
       aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
       aggregated_targets.each do |aggregated_target|
@@ -14,7 +40,13 @@ module Amimono
       end
     end
 
-    private
+    # Copied over from https://github.com/CocoaPods/CocoaPods/blob/e5afc825eeafa60933a1299f52eb764c267cc9b2/lib/cocoapods/generator/xcconfig/aggregate_xcconfig.rb#L152-L158
+    # with some modifications to this particular use case
+    def self.generate_vendored_build_settings(pod_targets:, xcconfig:)
+      pod_targets.each do |pod_target|
+        Pod::Generator::XCConfig::XCConfigHelper.add_settings_for_file_accessors_of_target(pod_target, xcconfig)
+      end
+    end
 
     # Copied over from https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/xcode/pods_project_generator/aggregate_target_installer.rb#L115-L131
     # with some modifications to this particular use case
