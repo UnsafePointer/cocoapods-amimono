@@ -7,11 +7,14 @@ module Amimono
             cd "$OBJROOT/Pods.build"
             filelist=""
             for dependency in "${DEPENDENCIES[@]}"; do
-              path="${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/${dependency}.build/Objects-normal/${ARCH}/*.o"
-              for obj_file in $path; do
-                filelist+="${OBJROOT}/Pods.build/${obj_file}"
-                filelist+=$'\\n'
-              done
+              path="${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/${dependency}.build/Objects-normal/${ARCH}"
+              if [ -d "$path" ]; then
+                search_path="$path/*.o"
+                for obj_file in $search_path; do
+                  filelist+="${OBJROOT}/Pods.build/${obj_file}"
+                  filelist+=$'\\n'
+                done
+              fi
             done
             filelist=${filelist\%$'\\n'}
             echo "$filelist" > "${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}-${ARCH}.objects.filelist"
