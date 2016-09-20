@@ -11,7 +11,7 @@ Pod::HooksManager.register('cocoapods-amimono', :post_install) do |installer_con
     target_info[pods_target] = installer_context.sandbox.target_support_files_dir pods_target.cocoapods_target_label
   end
 
-  integrator = Amimono::Integrator.new
+  integrator = Amimono::Integrator.new(installer_context)
   target_info.each do |pods_target, path|
     integrator.update_xcconfigs(aggregated_target_sandbox_path: path)
     puts "[Amimono] xcconfigs updated with filelist for target #{pods_target.cocoapods_target_label}"
