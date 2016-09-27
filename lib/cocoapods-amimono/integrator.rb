@@ -29,7 +29,7 @@ module Amimono
 
     AMIMONO_FILELIST_BUILD_PHASE = '[Amimono] Create filelist per architecture'
 
-    def update_xcconfigs(aggregated_target_sandbox_path:)
+    def update_xcconfigs(aggregated_target_sandbox_path)
       path = aggregated_target_sandbox_path
       archs = ['armv7', 'armv7s', 'arm64', 'i386', 'x86_64']
       # Find all xcconfigs for the aggregated target
@@ -47,16 +47,16 @@ module Amimono
       end
     end
 
-    def update_build_phases(aggregated_targets:)
+    def update_build_phases(aggregated_targets)
       # All user projects should be the same I hope
       user_project = aggregated_targets.first.user_project
       aggregated_targets.each do |aggregated_target|
         # This pick is probably wrong, but works for most of the simple cases
         user_target = aggregated_target.user_targets.first
         # Remove the `Embed Pods Frameworks` build phase
-        remove_embed_pods_frameworks(user_target: user_target)
+        remove_embed_pods_frameworks(user_target)
         # Create or update [Amimono] build phase
-        create_or_update_amimono_phase(user_target: user_target, phase_name: AMIMONO_FILELIST_BUILD_PHASE, script: generate_filelist_script(aggregated_target: aggregated_target))
+        create_or_update_amimono_phase(user_target, AMIMONO_FILELIST_BUILD_PHASE, generate_filelist_script(aggregated_target))
         puts "[Amimono] Build phases updated for target #{aggregated_target.cocoapods_target_label}"
       end
       user_project.save
@@ -64,13 +64,13 @@ module Amimono
 
     private
 
-    def remove_embed_pods_frameworks(user_target:)
+    def remove_embed_pods_frameworks(user_target)
       embed_pods_frameworks_build_phase = user_target.build_phases.find { |build_phase| build_phase.display_name.include? 'Embed Pods Frameworks' }
       return if embed_pods_frameworks_build_phase.nil?
       embed_pods_frameworks_build_phase.remove_from_project
     end
 
-    def create_or_update_amimono_phase(user_target:, phase_name:, script:)
+    def create_or_update_amimono_phase(user_target, phase_name, script)
       amimono_filelist_build_phase = user_target.build_phases.find { |build_phase| build_phase.display_name.include? phase_name } || user_target.new_shell_script_build_phase(phase_name)
       amimono_filelist_build_phase.shell_path = '/bin/bash'
       amimono_filelist_build_phase.shell_script = script
@@ -78,7 +78,7 @@ module Amimono
       user_target.build_phases.uniq!
     end
 
-    def generate_filelist_script(aggregated_target:)
+    def generate_filelist_script(aggregated_target)
       dependencies = []
       installer_context.pods_project.targets.select { |target| target.name == aggregated_target.cocoapods_target_label }.first.dependencies.each do |dependency|
         case dependency.target.product_type
