@@ -1,6 +1,12 @@
 module Amimono
   class Integrator
 
+    attr_reader :installer_context
+
+    def initialize(installer_context)
+      @installer_context = installer_context
+    end
+
     FILELIST_SCRIPT = <<-SCRIPT.strip_heredoc
           IFS=" " read -r -a SPLIT <<< "$ARCHS"
           for ARCH in "${SPLIT[@]}"; do
@@ -73,11 +79,17 @@ module Amimono
     end
 
     def generate_filelist_script(aggregated_target:)
-      dependencies = aggregated_target.specs.map(&:name).reject { |dependency| dependency.include? '/'}
+      dependencies = []
+      installer_context.pods_project.targets.select { |target| target.name == aggregated_target.cocoapods_target_label }.first.dependencies.each do |dependency|
+        case dependency.target.product_type
+        when 'com.apple.product-type.framework'
+          dependencies << "'#{dependency.name}'"
+        when 'com.apple.product-type.bundle'
+          # ignore
+        end
+      end
       puts "[Amimono] #{dependencies.count} dependencies found"
-      bash_array = dependencies.map { |dependency| "'#{dependency}'" }.join ' '
-      declare_statement = "declare -a DEPENDENCIES=(%s);\n" % bash_array
-      declare_statement + FILELIST_SCRIPT
+      "declare -a DEPENDENCIES=(#{dependencies.join(' ')});\n" + FILELIST_SCRIPT
     end
   end
 end
