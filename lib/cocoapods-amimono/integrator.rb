@@ -23,7 +23,7 @@ module Amimono
               fi
             done
             filelist=${filelist\%$'\\n'}
-            echo "$filelist" > "${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}-${ARCH}.objects.filelist"
+            echo "$filelist" > "${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}-${TARGET_NAME}-${ARCH}.objects.filelist"
           done
         SCRIPT
 
@@ -41,7 +41,7 @@ module Amimono
         # Add -filelist flag instead, for each architecture
         archs.each do |arch|
           config_key = "OTHER_LDFLAGS[arch=#{arch}]"
-          xcconfig.attributes[config_key] = "$(inherited) -filelist \"$(OBJROOT)/Pods.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)-#{arch}.objects.filelist\""
+          xcconfig.attributes[config_key] = "$(inherited) -filelist \"$(OBJROOT)/Pods.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)-$(TARGET_NAME)-#{arch}.objects.filelist\""
         end
         xcconfig.save_as full_path
       end

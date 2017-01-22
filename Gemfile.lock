@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cocoapods-amimono (0.0.5)
+    cocoapods-amimono (0.0.6)
 
 GEM
   remote: https://rubygems.org/
@@ -85,4 +85,4 @@ DEPENDENCIES
   rake
 
 BUNDLED WITH
-   1.12.5
+   1.14.1
