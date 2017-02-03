@@ -48,9 +48,7 @@ module Amimono
         targets = pod_targets + aggregated_target.search_paths_aggregate_targets.flat_map(&:pod_targets)
 
         targets.each do |pod_target|
-            unless pod_target.should_build? && pod_target.requires_frameworks?
-                Pod::Generator::XCConfig::XCConfigHelper.add_settings_for_file_accessors_of_target(aggregated_target, pod_target, xcconfig)
-            end
+            Pod::Generator::XCConfig::XCConfigHelper.add_settings_for_file_accessors_of_target(aggregated_target, pod_target, xcconfig)
         end
     end
 
