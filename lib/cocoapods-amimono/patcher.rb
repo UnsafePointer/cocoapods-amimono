@@ -23,7 +23,7 @@ module Amimono
           # But this also works and it's simpler
           configuration = entry.split('.')[-2]
           pod_targets = aggregated_target.pod_targets_for_build_configuration configuration
-          generate_vendored_build_settings(pod_targets, xcconfig)
+          generate_vendored_build_settings(aggregated_target, pod_targets, xcconfig)
           xcconfig.save_as full_path
         end
         puts "[Amimono] Vendored build settings patched for target #{aggregated_target.label}"
@@ -42,12 +42,14 @@ module Amimono
       end
     end
 
-    # Copied over from https://github.com/CocoaPods/CocoaPods/blob/e5afc825eeafa60933a1299f52eb764c267cc9b2/lib/cocoapods/generator/xcconfig/aggregate_xcconfig.rb#L152-L158
+    # Copied over from https://github.com/CocoaPods/CocoaPods/blob/2fa648221b6548e941116f5e146361ba557bbed0/lib/cocoapods/generator/xcconfig/aggregate_xcconfig.rb#L183-L191
     # with some modifications to this particular use case
-    def self.generate_vendored_build_settings(pod_targets, xcconfig)
-      pod_targets.each do |pod_target|
-        Pod::Generator::XCConfig::XCConfigHelper.add_settings_for_file_accessors_of_target(pod_target, xcconfig)
-      end
+    def self.generate_vendored_build_settings(aggregated_target, pod_targets, xcconfig)
+        targets = pod_targets + aggregated_target.search_paths_aggregate_targets.flat_map(&:pod_targets)
+
+        targets.each do |pod_target|
+            Pod::Generator::XCConfig::XCConfigHelper.add_settings_for_file_accessors_of_target(aggregated_target, pod_target, xcconfig)
+        end
     end
 
     # Copied over from https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/xcode/pods_project_generator/aggregate_target_installer.rb#L115-L131

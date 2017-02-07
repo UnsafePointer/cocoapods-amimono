@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 gemspec
 
 group :development do
-  gem 'cocoapods'
+  gem 'cocoapods', '>= 1.2.0'
 
   gem 'mocha'
   gem 'bacon'
