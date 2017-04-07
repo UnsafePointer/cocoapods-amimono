@@ -1,7 +1,7 @@
 # cocoapods-amimono
 
 <p align="center">
-  <img src="https://dl.dropboxusercontent.com/u/12352209/GitHub/amimono.gif" alt="amimono"/>
+  <img src="https://raw.githubusercontent.com/Ruenzuo/res/master/amimono.gif" alt="amimono"/>
 </p>
 
 Move all dynamic frameworks symbols into the main executable.
@@ -21,7 +21,7 @@ This is hardly an option for some. If you think you might be in that group, then
 
 This plugin is based on [dyld-image-loading-performance](https://github.com/stepanhruda/dyld-image-loading-performance). In a nutshell, it copies all symbols of your CocoaPods dependencies into your main app executable, so the dynamic linker doesn't have to load the frameworks. You can verify this yourself by enabling
 
-![log_setting_xcode.png](https://dl.dropboxusercontent.com/u/12352209/GitHub/log_setting_xcode.png)
+![log_setting_xcode.png](https://raw.githubusercontent.com/Ruenzuo/res/master/log_setting_xcode.png)
 
 and looking at the log output you shouldn't find any `dlopen` call of your CocoaPods frameworks.
 
