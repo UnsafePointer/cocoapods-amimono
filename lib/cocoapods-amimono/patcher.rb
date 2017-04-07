@@ -1,4 +1,5 @@
 require 'cocoapods/installer'
+require 'cocoapods-amimono/xcconfig_updater'
 
 module Amimono
   # This class will patch your project's copy resources script to match the one that would be
@@ -6,11 +7,23 @@ module Amimono
   class Patcher
 
     def self.patch!(installer)
+      patch_xcconfig_files(installer)
       patch_copy_resources_script(installer)
       patch_vendored_build_settings(installer)
     end
 
     private
+
+    def self.patch_xcconfig_files(installer)
+      aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
+      updater = XCConfigUpdater.new(installer)
+      aggregated_targets.each do |aggregated_target|
+        puts "[Amimono] Pods target found: #{aggregated_target.label}"
+        target_support = installer.sandbox.target_support_files_dir(aggregated_target.label)
+        updater.update_xcconfigs(aggregated_target, target_support)
+        puts "[Amimono] xcconfigs updated with filelist for target #{aggregated_target.label}"
+      end
+    end
 
     def self.patch_vendored_build_settings(installer)
       aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
