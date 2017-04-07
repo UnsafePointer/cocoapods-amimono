@@ -1,11 +1,5 @@
 module Amimono
-  class Integrator
-
-    attr_reader :installer_context
-
-    def initialize(installer_context)
-      @installer_context = installer_context
-    end
+  class BuildPhasesUpdater
 
     FILELIST_SCRIPT = <<-SCRIPT.strip_heredoc
           IFS=" " read -r -a SPLIT <<< "$ARCHS"
@@ -29,25 +23,7 @@ module Amimono
 
     AMIMONO_FILELIST_BUILD_PHASE = '[Amimono] Create filelist per architecture'
 
-    def update_xcconfigs(aggregated_target_sandbox_path)
-      path = aggregated_target_sandbox_path
-      archs = ['armv7', 'armv7s', 'arm64', 'i386', 'x86_64']
-      # Find all xcconfigs for the aggregated target
-      Dir.entries(path).select { |entry| entry.end_with? 'xcconfig' }.each do |entry|
-        full_path = path + entry
-        xcconfig = Xcodeproj::Config.new full_path
-        # Clear the -frameworks flag
-        xcconfig.other_linker_flags[:frameworks] = Set.new
-        # Add -filelist flag instead, for each architecture
-        archs.each do |arch|
-          config_key = "OTHER_LDFLAGS[arch=#{arch}]"
-          xcconfig.attributes[config_key] = "$(inherited) -filelist \"$(OBJROOT)/Pods.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)-$(TARGET_NAME)-#{arch}.objects.filelist\""
-        end
-        xcconfig.save_as full_path
-      end
-    end
-
-    def update_build_phases(aggregated_targets)
+    def update_build_phases(installer_context, aggregated_targets)
       # All user projects should be the same I hope
       user_project = aggregated_targets.first.user_project
       aggregated_targets.each do |aggregated_target|
@@ -56,7 +32,7 @@ module Amimono
         # Remove the `Embed Pods Frameworks` build phase
         remove_embed_pods_frameworks(user_target)
         # Create or update [Amimono] build phase
-        create_or_update_amimono_phase(user_target, AMIMONO_FILELIST_BUILD_PHASE, generate_filelist_script(aggregated_target))
+        create_or_update_amimono_phase(user_target, AMIMONO_FILELIST_BUILD_PHASE, generate_filelist_script(installer_context, aggregated_target))
         puts "[Amimono] Build phases updated for target #{aggregated_target.cocoapods_target_label}"
       end
       user_project.save
@@ -78,7 +54,7 @@ module Amimono
       user_target.build_phases.uniq!
     end
 
-    def generate_filelist_script(aggregated_target)
+    def generate_filelist_script(installer_context, aggregated_target)
       dependencies = []
       installer_context.pods_project.targets.select { |target| target.name == aggregated_target.cocoapods_target_label }.first.dependencies.each do |dependency|
         case dependency.target.product_type
