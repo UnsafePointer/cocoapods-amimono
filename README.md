@@ -30,7 +30,6 @@ and looking at the log output you shouldn't find any `dlopen` call of your Cocoa
 Currently this plugin has the following limitations:
 
 * You will have modify your `post_install` hook. This is necessary because the CocoaPods plugin API currently doesn't offer everything that the gem needs.
-* Only dependencies compiled from source will work. This means dependencies with bundled binaries (like vendored static frameworks) won't work. You will have to add these manually to your Xcode project.
 
 ## Installation
 
