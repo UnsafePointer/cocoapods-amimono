@@ -14,7 +14,8 @@ module Amimono
         full_path = path + entry
         xcconfig = Xcodeproj::Config.new full_path
         # Clear the -frameworks flag
-        non_binary_frameworks = aggregated_target.pod_targets.select(&:should_build?).map(&:name)
+        non_binary_frameworks = aggregated_target.pod_targets.select(&:should_build?).map { |t| t.product_name.gsub('.framework', '') }
+        STDERR.puts "#{non_binary_frameworks}"
         xcconfig.other_linker_flags[:frameworks].reject! { |framework| non_binary_frameworks.include?(framework) }
         # Add -filelist flag instead, for each architecture
         archs.each do |arch|
