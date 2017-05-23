@@ -10,6 +10,7 @@ module Amimono
       patch_xcconfig_files(installer)
       patch_copy_resources_script(installer)
       patch_vendored_build_settings(installer)
+      patch_embed_frameworks_script(installer)
     end
 
     private
@@ -55,6 +56,18 @@ module Amimono
       end
     end
 
+    def self.patch_embed_frameworks_script(installer)
+      project = installer.sandbox.project
+      aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
+      aggregated_targets.each do |aggregated_target|
+        path = aggregated_target.embed_frameworks_script_path
+        frameworks = frameworks_by_config(aggregated_target, project)
+        generator = Pod::Generator::EmbedFrameworksScript.new(frameworks)
+        generator.save_as(path)
+        puts "[Amimono] Embed frameworks script patched for target #{aggregated_target.label}"
+      end
+    end
+
     # Copied over from https://github.com/CocoaPods/CocoaPods/blob/2fa648221b6548e941116f5e146361ba557bbed0/lib/cocoapods/generator/xcconfig/aggregate_xcconfig.rb#L183-L191
     # with some modifications to this particular use case
     def self.generate_vendored_build_settings(aggregated_target, pod_targets, xcconfig)
@@ -82,5 +95,23 @@ module Amimono
         end
       end
     end
+
+    # Copied over from https://github.com/CocoaPods/CocoaPods/blob/1-2-stable/lib/cocoapods/installer/xcode/pods_project_generator/aggregate_target_installer.rb#L161-L171
+    # with some modifications to this particular use case
+    def self.frameworks_by_config(aggregated_target, project)
+      frameworks_by_config = {}
+      aggregated_target.user_build_configurations.keys.each do |config|
+        relevant_pod_targets = aggregated_target.pod_targets.select do |pod_target|
+          pod_target.include_in_build_config?(aggregated_target.target_definition, config)
+        end
+        frameworks_by_config[config] = relevant_pod_targets.flat_map do |pod_target|
+          frameworks = pod_target.file_accessors.flat_map(&:vendored_dynamic_artifacts).map { |fw| "${PODS_ROOT}/#{fw.relative_path_from(project.path.dirname)}" }
+          # Remove non vendored frameworks part
+          frameworks
+        end
+      end
+      frameworks_by_config
+    end
+    
   end
 end

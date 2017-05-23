@@ -29,8 +29,6 @@ module Amimono
       aggregated_targets.each do |aggregated_target|
         # This pick is probably wrong, but works for most of the simple cases
         user_target = aggregated_target.user_targets.first
-        # Remove the `Embed Pods Frameworks` build phase
-        remove_embed_pods_frameworks(user_target)
         # Create or update [Amimono] build phase
         create_or_update_amimono_phase(user_target, AMIMONO_FILELIST_BUILD_PHASE, generate_filelist_script(installer_context, aggregated_target))
         puts "[Amimono] Build phases updated for target #{aggregated_target.cocoapods_target_label}"
@@ -39,12 +37,6 @@ module Amimono
     end
 
     private
-
-    def remove_embed_pods_frameworks(user_target)
-      embed_pods_frameworks_build_phase = user_target.build_phases.find { |build_phase| build_phase.display_name.include? 'Embed Pods Frameworks' }
-      return if embed_pods_frameworks_build_phase.nil?
-      embed_pods_frameworks_build_phase.remove_from_project
-    end
 
     def create_or_update_amimono_phase(user_target, phase_name, script)
       amimono_filelist_build_phase = user_target.build_phases.find { |build_phase| build_phase.display_name.include? phase_name } || user_target.new_shell_script_build_phase(phase_name)
