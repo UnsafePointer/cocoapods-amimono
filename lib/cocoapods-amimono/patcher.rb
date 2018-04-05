@@ -105,7 +105,26 @@ module Amimono
           pod_target.include_in_build_config?(aggregated_target.target_definition, config)
         end
         frameworks_by_config[config] = relevant_pod_targets.flat_map do |pod_target|
-          frameworks = pod_target.file_accessors.flat_map(&:vendored_dynamic_artifacts).map { |fw| "${PODS_ROOT}/#{fw.relative_path_from(project.path.dirname)}" }
+          frameworks = pod_target.file_accessors.flat_map(&:vendored_dynamic_artifacts).map do |framework_path|
+            relative_path = framework_path.relative_path_from(project.path.dirname)
+            if Gem::Version.new(Pod::VERSION) > Gem::Version.new('1.2.1')
+              framework = { 
+                :name => framework_path.basename.to_s,
+                :input_path => "${PODS_ROOT}/#{relative_path}",
+                :output_path => "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/#{framework_path.basename}"
+              }
+              dsym_name = "#{framework_path.basename}.dSYM"
+              dsym_path = Pathname.new("#{framework_path.dirname}/#{dsym_name}")
+              if dsym_path.exist?
+                framework[:dsym_name] = dsym_name
+                framework[:dsym_input_path] = "${PODS_ROOT}/#{relative_path_to_sandbox}.dSYM"
+                framework[:dsym_output_path] = "${DWARF_DSYM_FOLDER_PATH}/#{dsym_name}"
+              end
+              framework
+            else
+              relative_path
+            end
+          end
           # Remove non vendored frameworks part
           frameworks
         end
