@@ -16,7 +16,7 @@ module Amimono
     private
 
     def self.patch_xcconfig_files(installer)
-      aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
+      aggregated_targets = installer.aggregate_targets
       updater = XCConfigUpdater.new(installer)
       aggregated_targets.each do |aggregated_target|
         puts "[Amimono] Pods target found: #{aggregated_target.label}"
@@ -27,7 +27,7 @@ module Amimono
     end
 
     def self.patch_vendored_build_settings(installer)
-      aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
+      aggregated_targets = installer.aggregate_targets
       aggregated_targets.each do |aggregated_target|
         path = installer.sandbox.target_support_files_dir aggregated_target.label
         Dir.entries(path).select { |entry| entry.end_with? 'xcconfig' }.each do |entry|
@@ -46,7 +46,7 @@ module Amimono
 
     def self.patch_copy_resources_script(installer)
       project = installer.sandbox.project
-      aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
+      aggregated_targets = installer.aggregate_targets
       aggregated_targets.each do |aggregated_target|
         path = aggregated_target.copy_resources_script_path
         resources = resources_by_config(aggregated_target, project)
@@ -58,7 +58,7 @@ module Amimono
 
     def self.patch_embed_frameworks_script(installer)
       project = installer.sandbox.project
-      aggregated_targets = installer.aggregate_targets.reject { |target| target.label.include? 'Test' }
+      aggregated_targets = installer.aggregate_targets
       aggregated_targets.each do |aggregated_target|
         path = aggregated_target.embed_frameworks_script_path
         frameworks = frameworks_by_config(aggregated_target, project)
