@@ -122,7 +122,7 @@ module Amimono
               end
               framework
             else
-              relative_path
+              "${PODS_ROOT}/#{relative_path}"
             end
           end
           # Remove non vendored frameworks part
