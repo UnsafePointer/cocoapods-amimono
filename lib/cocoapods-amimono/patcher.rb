@@ -117,7 +117,7 @@ module Amimono
               dsym_path = Pathname.new("#{framework_path.dirname}/#{dsym_name}")
               if dsym_path.exist?
                 framework[:dsym_name] = dsym_name
-                framework[:dsym_input_path] = "${PODS_ROOT}/#{relative_path_to_sandbox}.dSYM"
+                framework[:dsym_input_path] = "${PODS_ROOT}/#{relative_path}.dSYM"
                 framework[:dsym_output_path] = "${DWARF_DSYM_FOLDER_PATH}/#{dsym_name}"
               end
               framework
